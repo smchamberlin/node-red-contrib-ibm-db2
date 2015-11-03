@@ -253,7 +253,7 @@ function processInput (node,msg,db,stmt,columnList,service) {
             for (var j = 0; j < columnList.length; j++) {
                if (batchInsert == true) valueToInsert = msg.payload[i][columnList[j]];
                else valueToInsert = msg.payload[columnList[j]];
-               if (valueToInsert != undefined) {
+               if (valueToInsert !== undefined) {
                   if (valueToInsert == 'TIMESTAMP') {
                      valueList.push(genDB2Timestamp());
                      } 
