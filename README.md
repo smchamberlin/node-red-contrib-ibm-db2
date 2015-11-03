@@ -81,5 +81,5 @@ The following fields are optional:
 
 Authors
 -------
-* Steven Chamberlin - [smc2@us.ibm.com](mailto:smc2@us.ibm.com)
-* Nicholas Vargas 
+* [Steven Chamberlin](https://github.com/smchamberlin) - [smc2@us.ibm.com](mailto:smc2@us.ibm.com)
+* [Nicholas Vargas](https://github.com/navargas) 
