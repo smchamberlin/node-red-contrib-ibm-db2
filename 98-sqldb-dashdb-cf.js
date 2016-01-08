@@ -393,11 +393,14 @@ function SQLDBQueryNode(n) {
 
         this.on('input', function(msg) {
            if (query == "" || query == null) {
-              query = msg.payload; 
               if (msg.payload == "" || msg.payload == null) {
-                 node.error("SQLDB out node: msg.payload is empty!");
+                 node.error("SQLDB query node: msg.payload is empty!");
                  return;
                  } 
+              queryToUse = msg.payload; 
+           }
+           else {
+              queryToUse = query;
            }
            var parameterValues=[];
            if (params != "" && params != null) {
@@ -406,7 +409,7 @@ function SQLDBQueryNode(n) {
               parameterValues = extractValues(msg, path);
               console.log("Input node: parameterValues: " + parameterValues);
            }
-           db.query(query,parameterValues,function (err, rows, moreResultSets) {
+           db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
               if (err) {
                  console.log("Error fetching rows: " + err);
               } else {
@@ -482,10 +485,13 @@ function dashDBQueryNode(n) {
         this.on('input', function(msg) {
            if (query == "" || query == null) {
               if (msg.payload == "" || msg.payload == null) {
-                 node.error("dashDB out node: msg.payload is empty!");
+                 node.error("dashDB query node: msg.payload is empty!");
                  return;
                  } 
-              query = msg.payload; 
+              queryToUse = msg.payload; 
+           }
+           else {
+              queryToUse = query;
            }
            var parameterValues=[];
            if (params != "" && params != null) {
@@ -494,7 +500,7 @@ function dashDBQueryNode(n) {
               parameterValues = extractValues(msg, path);
               console.log("Input node: parameterValues: " + parameterValues);
            }
-           db.query(query,parameterValues,function (err, rows, moreResultSets) {
+           db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
               if (err) {
                  console.log("Error fetching rows: " + err);
               } else {

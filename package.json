@@ -1,6 +1,6 @@
 {
     "name"         : "node-red-nodes-cf-sqldb-dashdb",
-    "version"      : "0.2.9",
+    "version"      : "0.2.12",
     "description"  : "Node-RED nodes to access SQLDB and dashDB services on Bluemix",
     "dependencies" : {
         "cfenv": "x",
@@ -8,7 +8,7 @@
     },
     "repository" : {
         "type" : "git",
-        "url"  : "https://hub.jazz.net/git/smc2/sqldbdashdb"
+        "url"  : "https://github.com/smchamberlin/node-red-nodes-cf-sqldb-dashdb.git"
     },
     "license"  : "Apache",
     "keywords" : [ "node-red", "sqldb", "dashdb", "bluemix" ],
