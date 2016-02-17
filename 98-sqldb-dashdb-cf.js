@@ -35,6 +35,9 @@ module.exports = function(RED) {
         else if (i.match(/^(Analytics)/i) || i.match(/^(dashDB)/i)) {
             dashDBservices = dashDBservices.concat(appEnv.services[i].map(extractProperties));
         }
+        else if (i.match(/^(user-provided)/i)) {
+            SQLDBservices = SQLDBservices.concat(appEnv.services[i].map(extractProperties));
+        }
     }
 
     //
