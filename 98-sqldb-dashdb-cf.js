@@ -37,6 +37,7 @@ module.exports = function(RED) {
         }
         else if (i.match(/^(user-provided)/i)) {
             SQLDBservices = SQLDBservices.concat(appEnv.services[i].map(extractProperties));
+            dashDBservices = SQLDBservices.concat(appEnv.services[i].map(extractProperties));
         }
     }
 
