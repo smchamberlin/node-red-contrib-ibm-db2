@@ -323,7 +323,9 @@
 <script type="text/x-red" data-help-name="sqldb in">
    <p>
        A simple SQLDB node for executing queries. It executes a query on your SQLDB service database
-       and passes along the result set in the <b>msg</b> object, as msg.payload.
+       and passes along the result set in the <b>msg</b> object, as msg.payload.  If there is an
+       error during execution of the query, the msg.payload will be null and the error will be in
+       msg.error. 
    </p>
    <p>
        <b>Service</b> should point to your SQLDB service.  
@@ -419,7 +421,9 @@
 <script type="text/x-red" data-help-name="dashDB in">
    <p>
        A simple dashDB node for executing queries. It executes a query on your dashDB service database
-       and passes along the result set in the <b>msg</b> object, as msg.payload.
+       and passes along the result set in the <b>msg</b> object, as msg.payload.  If there is an
+       error during execution of the query, the msg.payload will be null and the error will be in
+       msg.error. 
    </p>
    <p>
        <b>Service</b> should point to your dashDB service.  

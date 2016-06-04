@@ -414,8 +414,10 @@ function SQLDBQueryNode(n) {
               console.log("Input node: parameterValues: " + parameterValues);
            }
            db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
+              queryresult = null;
               if (err) {
-                 console.log("Error fetching rows: " + err);
+                 node.error("SQLDB query node: " + err);
+                 msg.error = err;
               } else {
                  console.log("Fetching rows: " + rows);
                  console.log("value 1: " + JSON.stringify(rows[0]));
@@ -426,10 +428,10 @@ function SQLDBQueryNode(n) {
                        queryresult.push(rows[i]);
                     }
                  }
-            msg.payload = queryresult;
-            node.send(msg);
-           }
-        });
+              }
+              msg.payload = queryresult;
+              node.send(msg);
+          });
       });
     }
     RED.nodes.registerType("sqldb in",SQLDBQueryNode);
@@ -505,8 +507,10 @@ function dashDBQueryNode(n) {
               console.log("Input node: parameterValues: " + parameterValues);
            }
            db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
+              queryresult = null;
               if (err) {
-                 console.log("Error fetching rows: " + err);
+                 node.error("dashDB query node: " + err);
+                 msg.error = err;
               } else {
                  console.log("Fetching rows: " + rows);
                  console.log("value 1: " + JSON.stringify(rows[0]));
@@ -517,9 +521,9 @@ function dashDBQueryNode(n) {
                        queryresult.push(rows[i]);
                     }
                  }
-            msg.payload = queryresult;
-            node.send(msg);
-           }
+              }
+              msg.payload = queryresult;
+              node.send(msg);
         });
       });
     }

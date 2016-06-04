@@ -36,7 +36,8 @@ marks that you place in your SQL query, in the order that they appear.
 
 -- Name: Optionally give your node a name
 
-The results of your query will be returned as a JSON array in msg.payload.
+The results of your query will be returned as a JSON array in msg.payload.  If there are any errors
+during execution of the query, the payload will be null and the error will be returned in msg.error.
 
 
 Output node usage:
