@@ -14,124 +14,66 @@
   limitations under the License.
 -->
 
-<script type="text/x-red" data-template-name="sqldb out">
+<script type="text/x-red" data-template-name="dashDB">
     <div class="form-row">
-        <label for="node-input-service"><i class="fa fa-folder-close"></i> Service</label>
-        <select id="node-input-service">
-            <option value="" disabled></option>
-        </select>
+        <label for="node-config-input-hostname"><i class="fa fa-bookmark"></i> Hostname</label>
+        <input class="input-append-left" type="text" id="node-config-input-hostname">
     </div>
-
     <div class="form-row">
-        <label for="node-input-table"><i class="fa fa-briefcase"></i> Table</label>
-        <input type="text" id="node-input-table" placeholder="table">
+        <label for="node-config-input-db"><i class="fa fa-user"></i> Database</label>
+        <input type="text" id="node-config-input-db">
     </div>
-
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="name">
+        <label for="node-config-input-username"><i class="fa fa-user"></i> Username</label>
+        <input type="text" id="node-config-input-username">
     </div>
-
+    <div class="form-row">
+        <label for="node-config-input-password"><i class="fa fa-lock"></i> Password</label>
+        <input type="password" id="node-config-input-password">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-port"><i class="fa fa-lock"></i> Port</label>
+        <input type="text" id="node-config-input-port">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("sqldb out", {
-        category: "storage-output",
-        color: "rgb(9, 198, 110)",
+    RED.nodes.registerType("dashDB",{
+        category: "config",
+        color: "rgb(114, 199, 231)",
         defaults: {
-            service: { value: "", required: true },
-            table: { value: "", required: true },
-            name: { value: "" }
+            hostname: {value:"", required:true},
+            db: {value:""},
+            port: {value:"50000"},
+            name: {value:""}
         },
-        inputs: 1,
-        outputs: 0,
-        icon: "sqldb.png",
-        align: "right",
-        label: label,
-        labelStyle: function() {
-            return this.name?"node_label_italic":"";
+        credentials: {
+            username: {type:"text"},
+            password: {type:"password"}
         },
-        oneditprepare: oneditprepare
+        label: function() {
+            return this.name || this.host;
+        }
     });
-
-    function oneditprepare() {
-        var node = this;
-
-        var serviceSelect  = $('#node-input-service');
-
-        $.getJSON('sqldb/vcap/',function(data) {
-            var last = serviceSelect.children().last();
-            var opts = [];
-
-            for (var i=0; i < data.length; i++) {
-                var selected = node.service == data[i].name;
-                opts.push(
-                    '<option value="' + data[i].name + '"' + (selected ? " selected":"") + '>' +
-                        data[i].name +
-                    '</option>'
-                );
-            }
-
-            if (opts.length == 0) {
-	        console.log("SQLDB node error: No services bound");
-		this.error("SQLDB node error: no service bound");
-            } else {
-                last.before(opts.join(""));
-            }
-
-            serviceSelect.change();
-        });
-
-    }
-
-    function label() {
-        return this.name || this.table || "sqldb";
-    }
-
-</script>
-
-<script type="text/x-red" data-help-name="sqldb out">
-   <p>
-       A simple SQLDB output node. Stores elements from the <b>msg.payload</b> 
-       into your SQLDB service.  The msg.payload should include a value for
-       each column in your table.  If you put a 'TIMESTAMP' string as one of the
-       values, the node will replace it with the current timestamp in DB2 format.
-   </p>
-   <p>
-       So for example, if you have a table with columns (TS, SCREENNAME, TWEET, SENTIMENT, LOCATION),
-       then you might create a function node that flows into your sqldb output node
-       with code that maps each of those columns to other values in the msg object, like this:
-   </p>
-       msg.payload =<br>
-       {<br>
-&nbsp;&nbsp;&nbsp;TS : 'TIMESTAMP',<br>
-&nbsp;&nbsp;&nbsp;SCREENNAME : msg.tweet.user.screen_name,<br>
-&nbsp;&nbsp;&nbsp;TWEET : msg.payload,<br>
-&nbsp;&nbsp;&nbsp;SENTIMENT : msg.sentiment.score,<br>
-&nbsp;&nbsp;&nbsp;LOCATION : msg.location<br>
-       }<br>
-       return msg;<br><br>
-   <p>
-       <b>Service</b> should point to your SQLDB service.  
-   </p>
-   <p>        
-       <b>Table</b> should point to the table you wish to insert the values into.
-       This table needs to exist already in the database and needs to contain the 
-       same columns and datatypes that you are inserting through this node. 
-       The data needs to be in the format accepted by DB2 and within the appropriate
-       ranges/parameters for that datatype.
-   </p>
-   <p>
-      <b>Name:</b> Optionally give your node a name, otherwise the default will be the table name.
-   </p>
 </script>
 
 <script type="text/x-red" data-template-name="dashDB out">
+
     <div class="form-row">
         <label for="node-input-service"><i class="fa fa-folder-close"></i> Service</label>
-        <select id="node-input-service">
-            <option value="" disabled></option>
+        <select id="node-input-service" style="width:68%;">
+            <!-- <option value="" disabled></option> -->
+            <option value="_ext_"> External dashDB or DB2 instance</option>
         </select>
+    </div>
+
+    <div class="form-row hide" id="node-input-external-details">
+        <label for="node-input-dashDB"><i class="fa fa-bookmark"></i> Server</label>
+        <input type="text" id="node-input-dashDB">
     </div>
 
     <div class="form-row">
@@ -151,6 +93,7 @@
         category: "storage-output",
         color: "rgb(153, 204, 153)",
         defaults: {
+            dashDB: { type:"dashDB", validate:validateServer },
             service: { value: "", required: true },
             table: { value: "", required: true },
             name: { value: "" }
@@ -185,14 +128,25 @@
             }
 
             if (opts.length == 0) {
-	        console.log("dashDB node error: No services bound");
-		this.error("dashDB node error: no service bound");
+                node.service = "_ext_";
+                serviceSelect.find("option").filter(function() {
+                    return $(this).val() == node.service;
+                }).attr('selected', true);
             } else {
                 last.before(opts.join(""));
             }
-
             serviceSelect.change();
         });
+
+        serviceSelect.change(function() {
+            var service = serviceSelect.val();
+            if (service == "_ext_") {
+                $("#node-input-external-details").show();
+            } else {
+                $("#node-input-external-details").hide();
+            }
+        });
+
 
     }
 
@@ -200,15 +154,19 @@
         return this.name || this.table || "dashDB";
     }
 
+    function validateServer(v) {
+       return this.service != "_ext_" || v != "_ADD_";
+    }
+
 </script>
 
 <script type="text/x-red" data-help-name="dashDB out">
    <p>
-       A simple dashDB output node. Stores elements from the <b>msg.payload</b> 
+       A simple dashDB output node. Stores elements from the <b>msg.payload</b>
        into your dashDB service.  The msg.payload should include a value for
        each column in your table.  If you put a 'TIMESTAMP' string as one of the
        values, the node will replace it with the current timestamp in DB2 format.
-   </p>    
+   </p>
    <p>
        So for example, if you have a table with columns (TS, SCREENNAME, TWEET, SENTIMENT, LOCATION),
        then you might create a function node that flows into your sqldb output node
@@ -224,12 +182,12 @@
        }<br>
        return msg;<br><br>
    <p>
-       <b>Service</b> should point to your dashDB service.  
+       <b>Service</b> should point to your dashDB service.
    </p>
-   <p>        
+   <p>
        <b>Table</b> should point to the table you wish to insert the values into.
-       This table needs to exist already in the database and needs to contain the 
-       same columns and datatypes that you are inserting through this node. 
+       This table needs to exist already in the database and needs to contain the
+       same columns and datatypes that you are inserting through this node.
        The data needs to be in the format accepted by DB2 and within the appropriate
        ranges/parameters for that datatype.
    </p>
@@ -239,117 +197,19 @@
 
 </script>
 
-<script type="text/x-red" data-template-name="sqldb in">
-    <div class="form-row">
-        <label for="node-input-service"><i class="fa fa-folder-close"></i> Service</label>
-        <select id="node-input-service">
-            <option value="" disabled></option>
-        </select>
-    </div>
-
-    <div class="form-row">
-        <label for="node-input-query"><i class="fa fa-briefcase"></i> Query</label>
-        <textarea style="width:70%; height:75px" id="node-input-query">Type your SQL query here</textarea>
-    </div>
-
-    <div class="form-row">
-        <label for="node-input-params"><i class="fa fa-briefcase"></i> Parameter Markers (optional)</label>
-        <input type="text" id="node-input-params" placeholder="params">
-    </div>
-
-    <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="name">
-    </div>
-
-</script>
-
-<script type="text/javascript">
-    RED.nodes.registerType("sqldb in", {
-        category: "storage-input",
-        color: "rgb(9, 198, 110)",
-        defaults: {
-            service: { value: "", required: true },
-            query: { value: "", required: false },
-            params: { value: "", required: false },
-            name: { value: "" }
-        },
-        inputs: 1,
-        outputs: 1,
-        icon: "sqldb.png",
-        label: label,
-        labelStyle: function() {
-            return this.name?"node_label_italic":"";
-        },
-        oneditprepare: oneditprepare
-    });
-
-    function oneditprepare() {
-        var node = this;
-
-        var serviceSelect  = $('#node-input-service');
-
-        $.getJSON('sqldb/vcap/',function(data) {
-            var last = serviceSelect.children().last();
-            var opts = [];
-
-            for (var i=0; i < data.length; i++) {
-                var selected = node.service == data[i].name;
-                opts.push(
-                    '<option value="' + data[i].name + '"' + (selected ? " selected":"") + '>' +
-                        data[i].name +
-                    '</option>'
-                );
-            }
-
-            if (opts.length == 0) {
-	        console.log("SQLDB query node error: No services bound");
-		this.error("SQLDB query node error: no service bound");
-            } else {
-                last.before(opts.join(""));
-            }
-
-            serviceSelect.change();
-        });
-
-    }
-
-    function label() {
-        return this.name || "sqldb";
-    }
-
-</script>
-
-<script type="text/x-red" data-help-name="sqldb in">
-   <p>
-       A simple SQLDB node for executing queries. It executes a query on your SQLDB service database
-       and passes along the result set in the <b>msg</b> object, as msg.payload.  If there is an
-       error during execution of the query, the msg.payload will be null and the error will be in
-       msg.error. 
-   </p>
-   <p>
-       <b>Service</b> should point to your SQLDB service.  
-   </p>
-   <p>
-       <b>Query</b> is the query you wish to execute on your SQLDB service database.  If it is empty,
-       it will look for the query in the msg.payload.
-   </p>
-   <p>
-       <b>Parameter Markers</b> is a comma delimited set of json paths.  These will replace any question
-       marks that you place in your query, in the order that they appear.  
-   </p>
-   <p>
-      <b>Name:</b> Optionally give your node a name, otherwise the default will be the table name.
-   </p>
-</script>
-
 <script type="text/x-red" data-template-name="dashDB in">
-    <div class="form-row">
-        <label for="node-input-service"><i class="fa fa-folder-close"></i> Service</label>
-        <select id="node-input-service">
-            <option value="" disabled></option>
-        </select>
-    </div>
+   <div class="form-row">
+       <label for="node-input-service"><i class="fa fa-folder-close"></i> Service</label>
+       <select id="node-input-service" style="width:68%;">
+           <!-- <option value="" disabled></option> -->
+           <option value="_ext_"> External dashDB or DB2 instance</option>
+       </select>
+   </div>
+
+   <div class="form-row hide" id="node-input-external-details">
+       <label for="node-input-dashDB"><i class="fa fa-bookmark"></i> Server</label>
+       <input type="text" id="node-input-dashDB">
+   </div>
 
     <div class="form-row">
         <label for="node-input-query"><i class="fa fa-briefcase"></i> Query</label>
@@ -373,6 +233,7 @@
         category: "storage-input",
         color: "rgb(153, 204, 153)",
         defaults: {
+            dashDB: { type:"dashDB", validate:validateServer },
             service: { value: "", required: true },
             query: { value: "", required: false },
             params: { value: "", required: false },
@@ -390,7 +251,9 @@
 
     function oneditprepare() {
         var node = this;
+
         var serviceSelect  = $('#node-input-service');
+
         $.getJSON('dashDB/vcap/',function(data) {
             var last = serviceSelect.children().last();
             var opts = [];
@@ -403,19 +266,38 @@
                     '</option>'
                 );
             }
+
             if (opts.length == 0) {
-	        console.log("dashDB query node error: No services bound");
-		this.error("dashDB query node error: no service bound");
+                node.service = "_ext_";
+                serviceSelect.find("option").filter(function() {
+                    return $(this).val() == node.service;
+                }).attr('selected', true);
             } else {
                 last.before(opts.join(""));
             }
             serviceSelect.change();
         });
+
+        serviceSelect.change(function() {
+            var service = serviceSelect.val();
+            if (service == "_ext_") {
+                $("#node-input-external-details").show();
+            } else {
+                $("#node-input-external-details").hide();
+            }
+        });
+
     }
+
 
     function label() {
         return this.name || "dashDB";
     }
+
+    function validateServer(v) {
+       return this.service != "_ext_" || v != "_ADD_";
+    }
+
 </script>
 
 <script type="text/x-red" data-help-name="dashDB in">
@@ -423,10 +305,10 @@
        A simple dashDB node for executing queries. It executes a query on your dashDB service database
        and passes along the result set in the <b>msg</b> object, as msg.payload.  If there is an
        error during execution of the query, the msg.payload will be null and the error will be in
-       msg.error. 
+       msg.error.
    </p>
    <p>
-       <b>Service</b> should point to your dashDB service.  
+       <b>Service</b> should point to your dashDB service.
    </p>
    <p>
        <b>Query</b> is the query you wish to execute on your dashDB service database.  If it is empty,
@@ -434,10 +316,9 @@
    </p>
    <p>
        <b>Parameter Markers</b> is a comma delimited set of json paths.  These will replace any question
-       marks that you place in your query, in the order that they appear.  
+       marks that you place in your query, in the order that they appear.
    </p>
    <p>
       <b>Name:</b> Optionally give your node a name, otherwise the default will be the table name.
    </p>
 </script>
-
