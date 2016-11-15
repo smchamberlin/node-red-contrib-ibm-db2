@@ -113,7 +113,7 @@ module.exports = function(RED) {
         console.log("columnList: " + columnList);  
         var questionMarks = genQuestionMarks(columnList);
         
-        var insertStatement = "insert into '"+node.table+"' (" + columnList + ") values("+questionMarks+")";
+        var insertStatement = "insert into \""+node.table+"\" (" + columnList + ") values("+questionMarks+")";
         console.log("SQLDB output node: Preparing insert statement: " + insertStatement);	
 
         node.on("input", function(msg) {
@@ -189,7 +189,7 @@ module.exports = function(RED) {
 
         var questionMarks = genQuestionMarks(columnList);
         
-        var insertStatement = "insert into '"+node.table+"' (" + columnList + ") values("+questionMarks+")";
+        var insertStatement = "insert into \""+node.table+"\" (" + columnList + ") values("+questionMarks+")";
         console.log("dashDB output node: Preparing insert statement: " + insertStatement);	
    
         node.on("input", function(msg) {
