@@ -104,7 +104,14 @@ module.exports = function(RED) {
 	}
 
         var columnList = getColumns(node,db,node.table,"dashDB output node");
-        console.log("dashDB output node: columnList: " + columnList);
+        
+        var columnListWithQuotes = "";
+        for (var i = 0; i < columnList.length; i++) {
+                if (i != 0) columnListWithQuotes += ',';
+                columnListWithQuotes += "\"" + columnList[i] + "\"";
+        
+        }
+        console.log("dashDB output node: columnList: " + columnListWithQuotes);
 
         node.on("close", function() {
            console.log("dashDB: Closing db connection...");
@@ -114,7 +121,7 @@ module.exports = function(RED) {
 
         var questionMarks = genQuestionMarks(columnList);
 
-        var insertStatement = "insert into "+node.table+"(" + columnList + ") values("+questionMarks+")";
+        var insertStatement = "insert into \""+node.table+"\" (" + columnListWithQuotes + ") values("+questionMarks+")";
         console.log("dashDB output node: Preparing insert statement: " + insertStatement);
 
         node.on("input", function(msg) {
@@ -181,6 +188,7 @@ function processInput (node,msg,db,stmt,columnList,service) {
             for (var j = 0; j < columnList.length; j++) {
                if (batchInsert == true) valueToInsert = msg.payload[i][columnList[j]];
                else valueToInsert = msg.payload[columnList[j]];
+
                if (valueToInsert !== undefined) {
                   if (valueToInsert == 'TIMESTAMP') {
                      valueList.push(genDB2Timestamp());
