@@ -1,6 +1,6 @@
 {
     "name"         : "node-red-nodes-cf-sqldb-dashdb",
-    "version"      : "0.2.19",
+    "version"      : "0.2.20",
     "description"  : "Node-RED nodes to access SQLDB and dashDB services on Bluemix",
     "dependencies" : {
         "cfenv": "x",
