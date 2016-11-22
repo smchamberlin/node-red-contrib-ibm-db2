@@ -27,107 +27,39 @@ module.exports = function(RED) {
     }
 
     for (var i in appEnv.services) {
-        // filter for SQLDB services
-        if (i.match(/^(sqldb)/i)) {
-            SQLDBservices = SQLDBservices.concat(appEnv.services[i].map(extractProperties));
-        }
-        // filter for dashDB services
-        else if (i.match(/^(Analytics)/i) || i.match(/^(dashDB)/i)) {
+        // filter for dashDB and SQLDB services
+        if (i.match(/^(Analytics)/i) || i.match(/^(dashDB)/i) || i.match(/^(sqldb)/i)) {
             dashDBservices = dashDBservices.concat(appEnv.services[i].map(extractProperties));
         }
         else if (i.match(/^(user-provided)/i)) {
-            SQLDBservices = SQLDBservices.concat(appEnv.services[i].map(extractProperties));
             dashDBservices = dashDBservices.concat(appEnv.services[i].map(extractProperties));
         }
     }
 
-    //
-    // HTTP endpoints that will be accessed from the HTML file
-    //
-    RED.httpAdmin.get('/sqldb/vcap', function(req,res) {
-        res.send(JSON.stringify(SQLDBservices));
-    });
-    
     RED.httpAdmin.get('/dashDB/vcap', function(req,res) {
         res.send(JSON.stringify(dashDBservices));
     });
 
-    function SQLDBOutNode(n) {
+    //
+    // Create and register nodes
+    //
+    function dashDBNode(n) {
+        RED.nodes.createNode(this, n);
+        this.name = n.name;
+        this.hostname = n.hostname;
+        this.db = n.db;
+        this.port = n.port;
 
-        RED.nodes.createNode(this,n);
-
-        var db              = require('ibm_db')();
-        this.table          = n.table;
-        var SQLDBconfig     = appEnv.getService(n.service);
-
-        if (!this.table) {
-	    this.error("SQLDB node configuration error: table not defined");
-	    return;
-	}
-
-	if (!SQLDBconfig) {
-	   this.error("SQLDB node configuration error: service not defined");
-	   return; 
-	}
-
-	var node = this;
-        var db2 = {};
-        if (!debugLocal) {
-           db2.db = SQLDBconfig.credentials.db;               
-           db2.username = SQLDBconfig.credentials.username;
-           db2.hostname = SQLDBconfig.credentials.hostname;
-           db2.password = SQLDBconfig.credentials.password;
-           db2.port = SQLDBconfig.credentials.port;
+        var credentials = this.credentials;
+        if ((credentials) && (credentials.hasOwnProperty("username"))) { this.username = credentials.username; }
+        if ((credentials) && (credentials.hasOwnProperty("password"))) { this.password = credentials.password; }
+    }
+    RED.nodes.registerType("dashDB", dashDBNode, {
+        credentials: {
+            password: {type:"password"},
+            username: {type:"text"}
         }
-        // This is for debugging locally
-        else {
-           db2 = {
-           db: "TESTDB",
-           hostname: "localhost",
-           port: 50000,
-           username: "db2admin",
-           password: "yourpassword"
-           };
-        }
-
-        var connString = "DRIVER={DB2};DATABASE=" + db2.db + ";UID=" + db2.username + ";PWD=" + db2.password + ";HOSTNAME=" + db2.hostname + ";port=" + db2.port;
-
-        try {
-           console.log("SQLDB output node: Opening db connection...");
-           db.openSync(connString);
-           console.log("SQLDB output node: Connection open");
-	   }
-	catch (e) {
-           node.error(e.message);
-	}
-
-        var columnList = getColumns(node,db,node.table,"SQLDB output node");
-        console.log("SQLDB output node: columnList: " + columnList);
-
-        node.on("close", function() {
-        console.log("SQLDB output node: Closing db connection...");
-        db.closeSync();
-        console.log("SQLDB output node: Connection closed");
-        });
-
-        console.log("columnList: " + columnList);  
-        var questionMarks = genQuestionMarks(columnList);
-        
-        var insertStatement = "insert into \""+node.table+"\" (" + columnList + ") values("+questionMarks+")";
-        console.log("SQLDB output node: Preparing insert statement: " + insertStatement);	
-
-        node.on("input", function(msg) {
-		db.prepare(insertStatement, function (err, stmt) {
-                   if (err) {
-		      node.error("SQLDB output node: " + err);
-		   }
-		   else  {
-		      console.log("SQLDB output node: Prepare successful");
-		      processInput(node,msg,db,stmt,columnList,"SQLDB");
-		   }
-		});
-	});
-     }
+    });
 
     function dashDBOutNode(n) {
 
@@ -135,7 +67,7 @@ module.exports = function(RED) {
 
         var db              = require('ibm_db')();
         this.table          = n.table;
-        var dashDBconfig    = appEnv.getService(n.service);
+        var dashDBconfig    = _getdashDBconfig(n);
 
         if (!this.table) {
 	    this.error("dashDB node configuration error: table not defined");
@@ -144,30 +76,23 @@ module.exports = function(RED) {
 
 	if (!dashDBconfig) {
 	   this.error("dashDB node configuration error: service not defined");
-	   return; 
+	   return;
 	}
 
 	var node = this;
-        var db2 = {};
-        if (!debugLocal) {
-           db2.db = dashDBconfig.credentials.db;               
-           db2.username = dashDBconfig.credentials.username;
-           db2.hostname = dashDBconfig.credentials.hostname;
-           db2.password = dashDBconfig.credentials.password;
-           db2.port = dashDBconfig.credentials.port;
-        }
-        // This is for debugging locally
-        else {
-           db2 = {
-              db: "TESTDB",
-              hostname: "localhost",
-              port: 50000,
-              username: "db2admin",
-              password: "yourpassword"
-           };
-        }
 
-        var connString = "DRIVER={DB2};DATABASE=" + db2.db + ";UID=" + db2.username + ";PWD=" + db2.password + ";HOSTNAME=" + db2.hostname + ";port=" + db2.port;
+  // This is for debugging locally
+  if (debugLocal) {
+     dashDBconfig = {
+        db: "TESTDB",
+        hostname: "localhost",
+        port: 50000,
+        username: "db2admin",
+        password: "yourpassword"
+     };
+  }
+
+  var connString = "DRIVER={DB2};DATABASE=" + dashDBconfig.db + ";UID=" + dashDBconfig.username + ";PWD=" + dashDBconfig.password + ";HOSTNAME=" + dashDBconfig.hostname + ";port=" + dashDBconfig.port;
 
         try {
            console.log("dashDB output node: Opening db connection...");
@@ -179,14 +104,13 @@ module.exports = function(RED) {
 	}
 
         var columnList = getColumns(node,db,node.table,"dashDB output node");
-
+        
         var columnListWithQuotes = "";
         for (var i = 0; i < columnList.length; i++) {
                 if (i != 0) columnListWithQuotes += ',';
                 columnListWithQuotes += "\"" + columnList[i] + "\"";
-
+        
         }
-
         console.log("dashDB output node: columnList: " + columnListWithQuotes);
 
         node.on("close", function() {
@@ -196,10 +120,10 @@ module.exports = function(RED) {
         });
 
         var questionMarks = genQuestionMarks(columnList);
-        
+
         var insertStatement = "insert into \""+node.table+"\" (" + columnListWithQuotes + ") values("+questionMarks+")";
-        console.log("dashDB output node: Preparing insert statement: " + insertStatement);	
-   
+        console.log("dashDB output node: Preparing insert statement: " + insertStatement);
+
         node.on("input", function(msg) {
 		db.prepare(insertStatement, function (err, stmt) {
                    if (err) {
@@ -213,7 +137,6 @@ module.exports = function(RED) {
 	});
      }
 
-RED.nodes.registerType("sqldb out", SQLDBOutNode);
 RED.nodes.registerType("dashDB out", dashDBOutNode);
 
 function getColumns (node,db,table,service) {
@@ -223,7 +146,7 @@ function getColumns (node,db,table,service) {
       console.log(service+": Fetching column names for table " + table + "...");
       var sysibmColumns;
       try {
-         sysibmColumns = db.querySync("select name from sysibm.syscolumns where tbname = '"+table+"' and generated = ''"); 
+         sysibmColumns = db.querySync("select name from sysibm.syscolumns where tbname = '"+table+"' and generated = ''");
       }
       catch (e) {
          node.error("Error fetching column list: " + e.message);
@@ -231,7 +154,7 @@ function getColumns (node,db,table,service) {
       }
 
       if (sysibmColumns.length == 0) {
-         node.error(service+": table "+table+" not found - is it defined?  Case matters."); 
+         node.error(service+": table "+table+" not found - is it defined?  Case matters.");
          return -1;
       }
       var columnList = [];
@@ -251,10 +174,10 @@ function processInput (node,msg,db,stmt,columnList,service) {
       if (msg.payload instanceof Array) {
          console.log(service+": msg.payload is an array, need to iterate...");
          batchInsert = true;
-         insertIterations = msg.payload.length; 
+         insertIterations = msg.payload.length;
          }
       else {
-         console.log(service+": msg.payload not an array"); 
+         console.log(service+": msg.payload not an array");
          batchInsert = false;
          insertIterations = 1;
          }
@@ -265,10 +188,11 @@ function processInput (node,msg,db,stmt,columnList,service) {
             for (var j = 0; j < columnList.length; j++) {
                if (batchInsert == true) valueToInsert = msg.payload[i][columnList[j]];
                else valueToInsert = msg.payload[columnList[j]];
+
                if (valueToInsert !== undefined) {
                   if (valueToInsert == 'TIMESTAMP') {
                      valueList.push(genDB2Timestamp());
-                     } 
+                     }
                   else {
                      valueList.push(valueToInsert);
                      }
@@ -279,9 +203,9 @@ function processInput (node,msg,db,stmt,columnList,service) {
             console.log(valueList);
             stmt.execute(valueList, function (err, result) {
                if (err) {
-                  node.error(service+": Insert failed: "+err); 
+                  node.error(service+": Insert failed: "+err);
                } else {
-                  console.log(service+": Insert successful!"); 
+                  console.log(service+": Insert successful!");
                   result.closeSync();
                }
             });
@@ -352,106 +276,13 @@ function genDB2Timestamp() {
       ("00" + d.getSeconds()).slice(-2);
 }
 
-function SQLDBQueryNode(n) {
-
-        RED.nodes.createNode(this,n);
-        var db              = require('ibm_db')();
-        var query           = n.query;
-        var params          = n.params;
-        var SQLDBconfig     = appEnv.getService(n.service);
-
-        if (!SQLDBconfig) {
-           this.error("SQLDB node configuration error: service not defined");
-           return;
-        }
-
-        var node = this;
-        var db2 = {};
-        if (!debugLocal) {
-           db2.db = SQLDBconfig.credentials.db;
-           db2.username = SQLDBconfig.credentials.username;
-           db2.hostname = SQLDBconfig.credentials.hostname;
-           db2.password = SQLDBconfig.credentials.password;
-           db2.port = SQLDBconfig.credentials.port;
-        }
-        // This is for debugging locally
-        else {
-           db2 = {
-           db: "TESTDB",
-           hostname: "localhost",
-           port: 50000,
-           username: "db2admin",
-           password: "yourpassword"
-           };
-        }
-
-        var connString = "DRIVER={DB2};DATABASE=" + db2.db + ";UID=" + db2.username + ";PWD=" + db2.password + ";HOSTNAME=" + db2.hostname + ";port=" + db2.port;
-
-        try {
-           console.log("SQLDB query node: Opening db connection...");
-           db.openSync(connString);
-           console.log("SQLDB query node: connection open");
-           }
-        catch (e) {
-           node.error(e.message);
-        }
-
-        node.on("close", function() {
-           console.log("SQLDB query node: Closing db connection...");
-           db.closeSync();
-           console.log("SQLDB query node: Connection closed");
-        });
-
-
-        this.on('input', function(msg) {
-           if (query == "" || query == null) {
-              if (msg.payload == "" || msg.payload == null) {
-                 node.error("SQLDB query node: msg.payload is empty!");
-                 return;
-                 } 
-              queryToUse = msg.payload; 
-           }
-           else {
-              queryToUse = query;
-           }
-           var parameterValues=[];
-           if (params != "" && params != null) {
-              var path = pathToArray(params.toString());
-              console.log("Input node: pathToArray: " + path);
-              parameterValues = extractValues(msg, path);
-              console.log("Input node: parameterValues: " + parameterValues);
-           }
-           db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
-              queryresult = null;
-              if (err) {
-                 node.error("SQLDB query node: " + err);
-                 msg.error = err;
-              } else {
-                 console.log("Fetching rows: " + rows);
-                 console.log("value 1: " + JSON.stringify(rows[0]));
-                 if (rows.length == 1) {queryresult = rows[0];}
-                 else {
-                    queryresult = []; 
-                    for (var i = 0; i < rows.length; i++) {
-                       queryresult.push(rows[i]);
-                    }
-                 }
-              }
-              msg.payload = queryresult;
-              node.send(msg);
-          });
-      });
-    }
-    RED.nodes.registerType("sqldb in",SQLDBQueryNode);
-
-
 function dashDBQueryNode(n) {
 
         RED.nodes.createNode(this,n);
         var db              = require('ibm_db')();
         var query           = n.query;
         var params          = n.params;
-        var dashDBconfig    = appEnv.getService(n.service);
+        var dashDBconfig    = _getdashDBconfig(n);
 
         if (!dashDBconfig) {
            this.error("dashDB query node configuration error: service not defined");
@@ -459,26 +290,19 @@ function dashDBQueryNode(n) {
         }
 
         var node = this;
-        var db2 = {};
-        if (!debugLocal) {
-           db2.db = dashDBconfig.credentials.db;
-           db2.username = dashDBconfig.credentials.username;
-           db2.hostname = dashDBconfig.credentials.hostname;
-           db2.password = dashDBconfig.credentials.password;
-           db2.port = dashDBconfig.credentials.port;
-        }
+
         // This is for debugging locally
-        else {
-           db2 = {
-           db: "TESTDB",
-           hostname: "localhost",
-           port: 50000,
-           username: "db2admin",
-           password: "yourpassword"
+        if (debugLocal) {
+           dashDBconfig = {
+              db: "TESTDB",
+              hostname: "localhost",
+              port: 50000,
+              username: "db2admin",
+              password: "yourpassword"
            };
         }
 
-        var connString = "DRIVER={DB2};DATABASE=" + db2.db + ";UID=" + db2.username + ";PWD=" + db2.password + ";HOSTNAME=" + db2.hostname + ";port=" + db2.port;
+        var connString = "DRIVER={DB2};DATABASE=" + dashDBconfig.db + ";UID=" + dashDBconfig.username + ";PWD=" + dashDBconfig.password + ";HOSTNAME=" + dashDBconfig.hostname + ";port=" + dashDBconfig.port;
 
         try {
            console.log("dashDB query node: Opening db connection...");
@@ -501,8 +325,8 @@ function dashDBQueryNode(n) {
               if (msg.payload == "" || msg.payload == null) {
                  node.error("dashDB query node: msg.payload is empty!");
                  return;
-                 } 
-              queryToUse = msg.payload; 
+                 }
+              queryToUse = msg.payload;
            }
            else {
               queryToUse = query;
@@ -524,7 +348,7 @@ function dashDBQueryNode(n) {
                  console.log("value 1: " + JSON.stringify(rows[0]));
                  if (rows.length == 1) {queryresult = rows[0];}
                  else {
-                    queryresult = []; 
+                    queryresult = [];
                     for (var i = 0; i < rows.length; i++) {
                        queryresult.push(rows[i]);
                     }
@@ -536,5 +360,23 @@ function dashDBQueryNode(n) {
       });
     }
   RED.nodes.registerType("dashDB in",dashDBQueryNode);
+
+  function _getdashDBconfig(n) {
+      if (n.service === "_ext_") {
+          return RED.nodes.getNode(n.dashDB);
+
+      } else if (n.service !== "") {
+          var service        = appEnv.getService(n.service);
+          var dashDBconfig = { };
+
+          dashDBconfig.hostname = service.credentials.hostname;
+          dashDBconfig.username = service.credentials.username;
+          dashDBconfig.password = service.credentials.password;
+          dashDBconfig.db = service.credentials.db;
+          dashDBconfig.port = service.credentials.port;
+
+          return dashDBconfig;
+      }
+  }
 
 };
