@@ -1,10 +1,10 @@
 {
     "name"         : "node-red-nodes-cf-sqldb-dashdb",
-    "version"      : "0.2.20",
+    "version"      : "0.2.21",
     "description"  : "Node-RED nodes to access SQLDB and dashDB services on Bluemix",
     "dependencies" : {
         "cfenv": "x",
-        "ibm_db" : "0.0.x"
+        "ibm_db" : "1.0.x"
     },
     "repository" : {
         "type" : "git",
