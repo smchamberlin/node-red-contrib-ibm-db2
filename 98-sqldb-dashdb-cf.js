@@ -344,6 +344,7 @@ function dashDBQueryNode(n) {
                  node.error("dashDB query node: " + err);
                  msg.error = err;
               } else {
+                 msg.error = null;
                  console.log("Fetching rows: " + rows);
                  console.log("value 1: " + JSON.stringify(rows[0]));
                  if (rows.length == 1) {queryresult = rows[0];}
