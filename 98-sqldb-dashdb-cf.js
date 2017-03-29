@@ -111,7 +111,7 @@ module.exports = function(RED) {
                 columnListWithQuotes += "\"" + columnList[i] + "\"";
         
         }
-        console.trace("dashDB output node: columnList: " + columnListWithQuotes);
+        //console.trace("dashDB output node: columnList: " + columnListWithQuotes);
 
         node.on("close", function() {
            console.info("dashDB: Closing db connection...");
@@ -122,7 +122,7 @@ module.exports = function(RED) {
         var questionMarks = genQuestionMarks(columnList);
 
         var insertStatement = "insert into \""+node.table+"\" (" + columnListWithQuotes + ") values("+questionMarks+")";
-        console.trace("dashDB output node: Preparing insert statement: " + insertStatement);
+        //console.trace("dashDB output node: Preparing insert statement: " + insertStatement);
 
         node.on("input", function(msg) {
 		db.prepare(insertStatement, function (err, stmt) {
@@ -165,19 +165,19 @@ function getColumns (node,db,table,service) {
      }
 
 function processInput (node,msg,db,stmt,columnList,service) {
-      console.trace(service+": Input event received");
-      console.trace(service+": columnList: "+columnList);
+      //console.trace(service+": Input event received");
+      //console.trace(service+": columnList: "+columnList);
       var valueToInsert;
       var batchInsert;
       var valueList;
       var insertIterations;
       if (msg.payload instanceof Array) {
-         console.trace(service+": msg.payload is an array, need to iterate...");
+         //console.trace(service+": msg.payload is an array, need to iterate...");
          batchInsert = true;
          insertIterations = msg.payload.length;
          }
       else {
-         console.trace(service+": msg.payload not an array");
+         //console.trace(service+": msg.payload not an array");
          batchInsert = false;
          insertIterations = 1;
          }
@@ -200,13 +200,13 @@ function processInput (node,msg,db,stmt,columnList,service) {
                else {node.error(service+": Column "+columnList[j]+" is missing from the payload or has an undefined value"); return;}
             }
             // Excessive logging is unnecessary overhead for ETL type batch jobs
-            console.trace("Values to execute:");
-            console.trace(valueList);
+            //console.trace("Values to execute:");
+            //console.trace(valueList);
             stmt.execute(valueList, function (err, result) {
                if (err) {
                   node.error(service+": Insert failed: "+err);
                } else {
-                  console.trace(service+": Insert successful!");
+                  //console.trace(service+": Insert successful!");
                   result.closeSync();
                }
             });
@@ -337,7 +337,7 @@ function dashDBQueryNode(n) {
               var path = pathToArray(params.toString());
               console.info("Input node: pathToArray: " + path);
               parameterValues = extractValues(msg, path);
-              console.trace("Input node: parameterValues: " + parameterValues);
+              //console.trace("Input node: parameterValues: " + parameterValues);
            }
            db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
               queryresult = null;
@@ -346,8 +346,8 @@ function dashDBQueryNode(n) {
                  msg.error = err;
               } else {
                  msg.error = null;
-                 console.trace("Fetching rows: " + rows);
-                 console.trace("value 1: " + JSON.stringify(rows[0]));
+                 //console.trace("Fetching rows: " + rows);
+                 //console.trace("value 1: " + JSON.stringify(rows[0]));
                  if (rows.length == 1) {queryresult = rows[0];}
                  else {
                     queryresult = [];
