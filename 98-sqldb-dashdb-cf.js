@@ -199,13 +199,14 @@ function processInput (node,msg,db,stmt,columnList,service) {
                   }
                else {node.error(service+": Column "+columnList[j]+" is missing from the payload or has an undefined value"); return;}
             }
-            console.log("Values to execute:");
-            console.log(valueList);
+            // Excessive logging is unnecessary overhead for ETL type batch jobs
+            //console.log("Values to execute:");
+            //console.log(valueList);
             stmt.execute(valueList, function (err, result) {
                if (err) {
                   node.error(service+": Insert failed: "+err);
                } else {
-                  console.log(service+": Insert successful!");
+                  //console.log(service+": Insert successful!");
                   result.closeSync();
                }
             });
