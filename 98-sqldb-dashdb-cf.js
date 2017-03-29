@@ -95,9 +95,9 @@ module.exports = function(RED) {
   var connString = "DRIVER={DB2};DATABASE=" + dashDBconfig.db + ";UID=" + dashDBconfig.username + ";PWD=" + dashDBconfig.password + ";HOSTNAME=" + dashDBconfig.hostname + ";port=" + dashDBconfig.port;
 
         try {
-           node.info("dashDB output node: Opening db connection...");
+           console.info("dashDB output node: Opening db connection...");
            db.openSync(connString);
-           node.info("dashDB output node: Connection open");
+           console.info("dashDB output node: Connection open");
 	}
 	catch (e) {
            node.error(e.message);
@@ -111,18 +111,18 @@ module.exports = function(RED) {
                 columnListWithQuotes += "\"" + columnList[i] + "\"";
         
         }
-        node.debug("dashDB output node: columnList: " + columnListWithQuotes);
+        console.trace("dashDB output node: columnList: " + columnListWithQuotes);
 
         node.on("close", function() {
-           node.info("dashDB: Closing db connection...");
+           console.info("dashDB: Closing db connection...");
            db.closeSync();
-           node.info("dashDB output node: Connection closed");
+           console.info("dashDB output node: Connection closed");
         });
 
         var questionMarks = genQuestionMarks(columnList);
 
         var insertStatement = "insert into \""+node.table+"\" (" + columnListWithQuotes + ") values("+questionMarks+")";
-        node.debug("dashDB output node: Preparing insert statement: " + insertStatement);
+        console.trace("dashDB output node: Preparing insert statement: " + insertStatement);
 
         node.on("input", function(msg) {
 		db.prepare(insertStatement, function (err, stmt) {
@@ -130,7 +130,7 @@ module.exports = function(RED) {
 		      node.error("dashDB output node: " + err);
 		   }
 		   else  {
-		      node.info("dashDB output node: Prepare successful");
+		      console.info("dashDB output node: Prepare successful");
 		      processInput(node,msg,db,stmt,columnList,"dashDB");
 		   }
 		});
@@ -143,7 +143,7 @@ function getColumns (node,db,table,service) {
       //Remove the schema, if it exists, hopefully the table name is unique - need to improve this
       var removeSchema = table.split(".");
       if (removeSchema.length > 1) { table = removeSchema[1]; }
-      node.info(service+": Fetching column names for table " + table + "...");
+      console.info(service+": Fetching column names for table " + table + "...");
       var sysibmColumns;
       try {
          sysibmColumns = db.querySync("select name from sysibm.syscolumns where tbname = '"+table+"' and generated = ''");
@@ -165,19 +165,19 @@ function getColumns (node,db,table,service) {
      }
 
 function processInput (node,msg,db,stmt,columnList,service) {
-      node.debug(service+": Input event received");
-      node.debug(service+": columnList: "+columnList);
+      console.trace(service+": Input event received");
+      console.trace(service+": columnList: "+columnList);
       var valueToInsert;
       var batchInsert;
       var valueList;
       var insertIterations;
       if (msg.payload instanceof Array) {
-         node.debug(service+": msg.payload is an array, need to iterate...");
+         console.trace(service+": msg.payload is an array, need to iterate...");
          batchInsert = true;
          insertIterations = msg.payload.length;
          }
       else {
-         node.debug(service+": msg.payload not an array");
+         console.trace(service+": msg.payload not an array");
          batchInsert = false;
          insertIterations = 1;
          }
@@ -200,13 +200,13 @@ function processInput (node,msg,db,stmt,columnList,service) {
                else {node.error(service+": Column "+columnList[j]+" is missing from the payload or has an undefined value"); return;}
             }
             // Excessive logging is unnecessary overhead for ETL type batch jobs
-            node.trace("Values to execute:");
-            node.trace(valueList);
+            console.trace("Values to execute:");
+            console.trace(valueList);
             stmt.execute(valueList, function (err, result) {
                if (err) {
                   node.error(service+": Insert failed: "+err);
                } else {
-                  node.debug(service+": Insert successful!");
+                  console.trace(service+": Insert successful!");
                   result.closeSync();
                }
             });
@@ -306,18 +306,18 @@ function dashDBQueryNode(n) {
         var connString = "DRIVER={DB2};DATABASE=" + dashDBconfig.db + ";UID=" + dashDBconfig.username + ";PWD=" + dashDBconfig.password + ";HOSTNAME=" + dashDBconfig.hostname + ";port=" + dashDBconfig.port;
 
         try {
-           node.info("dashDB query node: Opening db connection...");
+           console.info("dashDB query node: Opening db connection...");
            db.openSync(connString);
-           node.info("dashDB query node: Connection open");
+           console.info("dashDB query node: Connection open");
            }
         catch (e) {
            node.error(e.message);
         }
 
         node.on("close", function() {
-           node.info("dashDB query node: Closing db connection...");
+           console.info("dashDB query node: Closing db connection...");
            db.closeSync();
-           node.info("dashDB query node: Connection closed");
+           console.info("dashDB query node: Connection closed");
         });
 
 
@@ -335,9 +335,9 @@ function dashDBQueryNode(n) {
            var parameterValues=[];
            if (params != "" && params != null) {
               var path = pathToArray(params.toString());
-              node.info("Input node: pathToArray: " + path);
+              console.info("Input node: pathToArray: " + path);
               parameterValues = extractValues(msg, path);
-              node.debug("Input node: parameterValues: " + parameterValues);
+              console.trace("Input node: parameterValues: " + parameterValues);
            }
            db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
               queryresult = null;
@@ -346,8 +346,8 @@ function dashDBQueryNode(n) {
                  msg.error = err;
               } else {
                  msg.error = null;
-                 node.debug("Fetching rows: " + rows);
-                 node.trace("value 1: " + JSON.stringify(rows[0]));
+                 console.trace("Fetching rows: " + rows);
+                 console.trace("value 1: " + JSON.stringify(rows[0]));
                  if (rows.length == 1) {queryresult = rows[0];}
                  else {
                     queryresult = [];
