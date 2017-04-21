@@ -171,7 +171,7 @@ function processInput (node,msg,db,stmt,columnList,service) {
       var batchInsert;
       var valueList;
       var insertIterations;
-      if (msg.payload instanceof Array) {
+      if (Array.isArray(msg.payload)) {
          console.log(service+": msg.payload is an array, need to iterate...");
          batchInsert = true;
          insertIterations = msg.payload.length;
