@@ -4,7 +4,7 @@
     "description"  : "Node-RED nodes to access SQLDB and dashDB services on Bluemix",
     "dependencies" : {
         "cfenv": "x",
-        "ibm_db" : "1.0.x"
+        "ibm_db" : "2.x"
     },
     "repository" : {
         "type" : "git",
