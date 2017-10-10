@@ -127,7 +127,7 @@ module.exports = function(RED) {
         node.on("input", function(msg) {
 		db.prepare(insertStatement, function (err, stmt) {
                    if (err) {
-		      node.error("dashDB output node: " + err);
+		      node.error("dashDB output node: " + err, msg);  // jo2mod
 		   }
 		   else  {
 		      console.log("dashDB output node: Prepare successful");
@@ -197,16 +197,26 @@ function processInput (node,msg,db,stmt,columnList,service) {
                      valueList.push(valueToInsert);
                      }
                   }
-               else {node.error(service+": Column "+columnList[j]+" is missing from the payload or has an undefined value"); return;}
+               else {
+                  var errmsg = service+": Column "+columnList[j]+" is missing from the payload or has an undefined value"; // jo2mod
+                  msg.payload = errmsg; // jo2mod
+//                  node.send(msg); // jo2mod
+                  node.error(errmsg, msg); // jo2mod
+                  return;} // jo2mod
             }
             console.log("Values to execute:");
             console.log(valueList);
             stmt.execute(valueList, function (err, result) {
                if (err) {
-                  node.error(service+": Insert failed: "+err);
+                  msg.payload = err; // jo2mod
+                  console.log('Error payload', JSON.stringify(err));
+                  node.send(msg); // jo2mod
+//                  node.error(service+": Insert failed: "+err, msg); // jo2mod
                } else {
                   console.log(service+": Insert successful!");
                   result.closeSync();
+                  msg.payload = result; // jo2mod
+                  node.send(msg); // jo2mod
                }
             });
          }
@@ -323,7 +333,7 @@ function dashDBQueryNode(n) {
         this.on('input', function(msg) {
            if (query == "" || query == null) {
               if (msg.payload == "" || msg.payload == null) {
-                 node.error("dashDB query node: msg.payload is empty!");
+                 node.error("dashDB query node: msg.payload is empty!", msg); // jo2mod
                  return;
                  }
               queryToUse = msg.payload;
@@ -341,7 +351,7 @@ function dashDBQueryNode(n) {
            db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
               queryresult = null;
               if (err) {
-                 node.error("dashDB query node: " + err);
+                 node.error("dashDB query node: " + err, msg); // jo2mod
                  msg.error = err;
               } else {
                  msg.error = null;
