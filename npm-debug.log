@@ -1,0 +1,110 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/Users/smc2/.nvm/versions/node/v6.6.0/bin/node',
+1 verbose cli   '/Users/smc2/.nvm/versions/node/v6.6.0/bin/npm',
+1 verbose cli   'publish' ]
+2 info using npm@3.10.3
+3 info using node@v6.6.0
+4 verbose publish [ '.' ]
+5 silly cache add args [ '.', null ]
+6 verbose cache add spec .
+7 silly cache add parsed spec Result {
+7 silly cache add   raw: '.',
+7 silly cache add   scope: null,
+7 silly cache add   escapedName: null,
+7 silly cache add   name: null,
+7 silly cache add   rawSpec: '.',
+7 silly cache add   spec: '/Users/smc2/node-red-nodes-cf-sqldb-dashdb',
+7 silly cache add   type: 'directory' }
+8 verbose addLocalDirectory /Users/smc2/.npm/node-red-nodes-cf-sqldb-dashdb/0.2.24/package.tgz not in flight; packing
+9 verbose correctMkdir /Users/smc2/.npm correctMkdir not in flight; initializing
+10 info lifecycle node-red-nodes-cf-sqldb-dashdb@0.2.24~prepublish: node-red-nodes-cf-sqldb-dashdb@0.2.24
+11 silly lifecycle node-red-nodes-cf-sqldb-dashdb@0.2.24~prepublish: no script for prepublish, continuing
+12 verbose tar pack [ '/Users/smc2/.npm/node-red-nodes-cf-sqldb-dashdb/0.2.24/package.tgz',
+12 verbose tar pack   '/Users/smc2/node-red-nodes-cf-sqldb-dashdb' ]
+13 verbose tarball /Users/smc2/.npm/node-red-nodes-cf-sqldb-dashdb/0.2.24/package.tgz
+14 verbose folder /Users/smc2/node-red-nodes-cf-sqldb-dashdb
+15 verbose addLocalTarball adding from inside cache /Users/smc2/.npm/node-red-nodes-cf-sqldb-dashdb/0.2.24/package.tgz
+16 verbose correctMkdir /Users/smc2/.npm correctMkdir not in flight; initializing
+17 silly cache afterAdd node-red-nodes-cf-sqldb-dashdb@0.2.24
+18 verbose afterAdd /Users/smc2/.npm/node-red-nodes-cf-sqldb-dashdb/0.2.24/package/package.json not in flight; writing
+19 verbose correctMkdir /Users/smc2/.npm correctMkdir not in flight; initializing
+20 verbose afterAdd /Users/smc2/.npm/node-red-nodes-cf-sqldb-dashdb/0.2.24/package/package.json written
+21 silly publish { name: 'node-red-nodes-cf-sqldb-dashdb',
+21 silly publish   version: '0.2.24',
+21 silly publish   description: 'Node-RED nodes to access SQLDB and dashDB services on Bluemix',
+21 silly publish   dependencies: { cfenv: 'x', ibm_db: '2.x' },
+21 silly publish   repository:
+21 silly publish    { type: 'git',
+21 silly publish      url: 'git+https://github.com/smchamberlin/node-red-nodes-cf-sqldb-dashdb.git' },
+21 silly publish   license: 'Apache',
+21 silly publish   keywords: [ 'node-red', 'sqldb', 'dashdb', 'bluemix' ],
+21 silly publish   'node-red': { nodes: { 'sqldb-dashdb-cf': '98-sqldb-dashdb-cf.js' } },
+21 silly publish   author: { name: 'Steven Chamberlin', email: 'smc2@us.ibm.com' },
+21 silly publish   contributors: [ { name: 'Nicholas Vargas', email: 'navargas@us.ibm.com' } ],
+21 silly publish   readme: 'node-red-node-cf-sqldb\n=========================\n[Node-RED](http://nodered.org) nodes to work with a database \nin a SQLDB or dashDB service that is integrated with\n[IBM Bluemix](http://bluemix.net).\n\nInstall\n-------\nInstall from [npm](http://npmjs.org)\n```\nnpm install node-red-nodes-cf-sqldb-dashdb\n```\n\nUsage\n-----\nThis package contains 4 nodes -- two pairs of nodes for each of SQLDB and dashDB services.  The node pairs work almost identically, so the documentation contained here\napplies to both.  For each service, a query and an output node is provided.  The query nodes let you issue a query against\nyour SQLDB or dashDB service and pass along the result set in the msg object.  The output nodes store elements from the msg object\ninto your SQLDB or dashDB service database.\n\n\nQuery node usage:\n-----------------\n\nYou will need to fill in the following fields:\n\n-- Service should point to your SQLDB or dashDB service.\n\n-- Query is the SQL select query you wish to execute on your dashDB service database.  If the\nfield is empty, it will get the query from the msg.payload.\n\nThese fields are optional:\n\n-- Parameter Markers is a comma delimited set of json paths.  These will replace any question\nmarks that you place in your SQL query, in the order that they appear.\n\n-- Name: Optionally give your node a name\n\nThe results of your query will be returned as a JSON array in msg.payload.  If there are any errors\nduring execution of the query, the payload will be null and the error will be returned in msg.error.\n\n\nOutput node usage:\n------------------\n\nThe output node will get the values to insert from msg.payload.  \n\nSo for example, you might create a function node that flows into your sqldb output node\nwith code like this:\n\n```\nmsg.payload = \n{\n  TS : \'TIMESTAMP\',\n  SCREENNAME : msg.tweet.user.screen_name,\n  TWEET : msg.payload,\n  SENTIMENT : msg.sentiment.score,\n  LOCATION : msg.location\n}\nreturn msg;\n```\n\nThis would assume that you have a table already created with columns (TS, SCREENNAME, TWEET, SENTIMENT, LOCATION).\n\'TIMESTAMP\' string is a special keyword that the node will replace with a real DB2 timestamp before insertion.\nIf you are missing a required column, an error will be displayed in the debug view.\n\nFor output node configuration, you will need to fill in the following fields:\n\n-- Service should point to your SQLDB or dashDB service.\n\n-- Table should point to the table you wish to insert the values into.\nThis table needs to exist already in the database and needs to contain the\nsame number of columns that you are inserting through this node. The data\ntypes of the columns have to match. The data coming into the node through \nthe msg.payload needs to be in the format accepted by DB2 and within the \nappropriate ranges/parameters for that datatype.\n\nThe following fields are optional:\n\n-- Name: Optionally give your node a name, otherwise the default will be the table name.\n\n\nAuthors\n-------\n* [Steven Chamberlin](https://github.com/smchamberlin) - [smc2@us.ibm.com](mailto:smc2@us.ibm.com)\n* [Nicholas Vargas](https://github.com/navargas) \n',
+21 silly publish   readmeFilename: 'README.md',
+21 silly publish   gitHead: '0e593393e11b1f960fbc32c74ca4c82ee96dd157',
+21 silly publish   bugs: { url: 'https://github.com/smchamberlin/node-red-nodes-cf-sqldb-dashdb/issues' },
+21 silly publish   homepage: 'https://github.com/smchamberlin/node-red-nodes-cf-sqldb-dashdb#readme',
+21 silly publish   _id: 'node-red-nodes-cf-sqldb-dashdb@0.2.24',
+21 silly publish   scripts: {},
+21 silly publish   _shasum: 'e3afe894ac4c6194ab7c884342b5fd407c3c3648',
+21 silly publish   _from: '.' }
+22 verbose getPublishConfig undefined
+23 silly mapToRegistry name node-red-nodes-cf-sqldb-dashdb
+24 silly mapToRegistry using default registry
+25 silly mapToRegistry registry https://registry.npmjs.org/
+26 silly mapToRegistry data Result {
+26 silly mapToRegistry   raw: 'node-red-nodes-cf-sqldb-dashdb',
+26 silly mapToRegistry   scope: null,
+26 silly mapToRegistry   escapedName: 'node-red-nodes-cf-sqldb-dashdb',
+26 silly mapToRegistry   name: 'node-red-nodes-cf-sqldb-dashdb',
+26 silly mapToRegistry   rawSpec: '',
+26 silly mapToRegistry   spec: 'latest',
+26 silly mapToRegistry   type: 'tag' }
+27 silly mapToRegistry uri https://registry.npmjs.org/node-red-nodes-cf-sqldb-dashdb
+28 verbose publish registryBase https://registry.npmjs.org/
+29 silly publish uploading /Users/smc2/.npm/node-red-nodes-cf-sqldb-dashdb/0.2.24/package.tgz
+30 verbose request uri https://registry.npmjs.org/node-red-nodes-cf-sqldb-dashdb
+31 verbose request sending authorization for write operation
+32 info attempt registry request try #1 at 6:09:42 PM
+33 verbose request id 0d7a83de31babacf
+34 http request PUT https://registry.npmjs.org/node-red-nodes-cf-sqldb-dashdb
+35 http 403 https://registry.npmjs.org/node-red-nodes-cf-sqldb-dashdb
+36 verbose headers { 'content-type': 'application/json',
+36 verbose headers   'cache-control': 'max-age=300',
+36 verbose headers   'content-length': '92',
+36 verbose headers   'accept-ranges': 'bytes',
+36 verbose headers   date: 'Tue, 10 Oct 2017 01:09:44 GMT',
+36 verbose headers   via: '1.1 varnish',
+36 verbose headers   connection: 'keep-alive',
+36 verbose headers   'x-served-by': 'cache-sjc3621-SJC',
+36 verbose headers   'x-cache': 'MISS',
+36 verbose headers   'x-cache-hits': '0',
+36 verbose headers   'x-timer': 'S1507597783.968596,VS0,VE1166',
+36 verbose headers   vary: 'Accept-Encoding, Accept' }
+37 verbose request invalidating /Users/smc2/.npm/registry.npmjs.org/node-red-nodes-cf-sqldb-dashdb on PUT
+38 error publish Failed PUT 403
+39 verbose stack Error: You cannot publish over the previously published version 0.2.24. : node-red-nodes-cf-sqldb-dashdb
+39 verbose stack     at makeError (/Users/smc2/.nvm/versions/node/v6.6.0/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:264:12)
+39 verbose stack     at CachingRegistryClient.<anonymous> (/Users/smc2/.nvm/versions/node/v6.6.0/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:252:14)
+39 verbose stack     at Request._callback (/Users/smc2/.nvm/versions/node/v6.6.0/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:172:14)
+39 verbose stack     at Request.self.callback (/Users/smc2/.nvm/versions/node/v6.6.0/lib/node_modules/npm/node_modules/request/request.js:200:22)
+39 verbose stack     at emitTwo (events.js:106:13)
+39 verbose stack     at Request.emit (events.js:191:7)
+39 verbose stack     at Request.<anonymous> (/Users/smc2/.nvm/versions/node/v6.6.0/lib/node_modules/npm/node_modules/request/request.js:1067:10)
+39 verbose stack     at emitOne (events.js:101:20)
+39 verbose stack     at Request.emit (events.js:188:7)
+39 verbose stack     at IncomingMessage.<anonymous> (/Users/smc2/.nvm/versions/node/v6.6.0/lib/node_modules/npm/node_modules/request/request.js:988:12)
+40 verbose statusCode 403
+41 verbose pkgid node-red-nodes-cf-sqldb-dashdb
+42 verbose cwd /Users/smc2/node-red-nodes-cf-sqldb-dashdb
+43 error Darwin 16.6.0
+44 error argv "/Users/smc2/.nvm/versions/node/v6.6.0/bin/node" "/Users/smc2/.nvm/versions/node/v6.6.0/bin/npm" "publish"
+45 error node v6.6.0
+46 error npm  v3.10.3
+47 error code E403
+48 error You cannot publish over the previously published version 0.2.24. : node-red-nodes-cf-sqldb-dashdb
+49 error If you need help, you may report this error at:
+49 error     <https://github.com/npm/npm/issues>
+50 verbose exit [ 1, true ]
