@@ -17,7 +17,6 @@ module.exports = function(RED) {
 
     var cfEnv = require("cfenv");
     var appEnv = cfEnv.getAppEnv();
-    var debugLocal = false;
     var SQLDBservices = [];
     var dashDBservices = [];
 
@@ -81,18 +80,15 @@ module.exports = function(RED) {
 
 	var node = this;
 
-  // This is for debugging locally
-  if (debugLocal) {
-     dashDBconfig = {
-        db: "TESTDB",
-        hostname: "localhost",
-        port: 50000,
-        username: "db2admin",
-        password: "yourpassword"
-     };
-  }
-
-  var connString = "DRIVER={DB2};DATABASE=" + dashDBconfig.db + ";UID=" + dashDBconfig.username + ";PWD=" + dashDBconfig.password + ";HOSTNAME=" + dashDBconfig.hostname + ";port=" + dashDBconfig.port;
+       if (dashDBconfig.ssldsn != null)  {
+          var connString = dashDBconfig.ssldsn;  
+          }
+       else {
+          var connString = "DATABASE="+dashDBconfig.db+";HOSTNAME="+dashDBconfig.hostname+";PORT="+dashDBconfig.port+";PROTOCOL=TCPIP;UID="+dashDBconfig.username+";PWD="+dashDBconfig.password;
+          if (dashDBconfig.port == 50001) {
+             connString = connString + ";Security=SSL";
+             }
+          }
 
         try {
            console.log("dashDB output node: Opening db connection...");
@@ -304,20 +300,17 @@ function dashDBQueryNode(n) {
            return;
         }
 
-        var node = this;
+       var node = this;
 
-        // This is for debugging locally
-        if (debugLocal) {
-           dashDBconfig = {
-              db: "TESTDB",
-              hostname: "localhost",
-              port: 50000,
-              username: "db2admin",
-              password: "yourpassword"
-           };
-        }
-
-        var connString = "DRIVER={DB2};DATABASE=" + dashDBconfig.db + ";UID=" + dashDBconfig.username + ";PWD=" + dashDBconfig.password + ";HOSTNAME=" + dashDBconfig.hostname + ";port=" + dashDBconfig.port;
+       if (dashDBconfig.ssldsn != null)  {
+          var connString = dashDBconfig.ssldsn;
+          }
+       else {
+          var connString = "DATABASE="+dashDBconfig.db+";HOSTNAME="+dashDBconfig.hostname+";PORT="+dashDBconfig.port+";PROTOCOL=TCPIP;UID="+dashDBconfig.username+";PWD="+dashDBconfig.password;
+          if (dashDBconfig.port == 50001) {
+             connString = connString + ";Security=SSL";
+             }
+          }
 
         jail = connectToDB(node,db,connString);
 
@@ -394,6 +387,7 @@ function dashDBQueryNode(n) {
           dashDBconfig.password = service.credentials.password;
           dashDBconfig.db = service.credentials.db;
           dashDBconfig.port = service.credentials.port;
+          dashDBconfig.ssldsn = service.credentials.ssldsn;
 
           return dashDBconfig;
       }
