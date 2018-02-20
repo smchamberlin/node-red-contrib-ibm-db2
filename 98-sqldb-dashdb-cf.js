@@ -67,6 +67,8 @@ module.exports = function(RED) {
         var db              = require('ibm_db')();
         this.table          = n.table;
         var dashDBconfig    = _getdashDBconfig(n);
+        var columnList      = null;
+        var insertStatement = null;
 
         if (!this.table) {
 	    this.error("dashDB node configuration error: table not defined");
@@ -81,7 +83,7 @@ module.exports = function(RED) {
 	var node = this;
 
        if (dashDBconfig.ssldsn != null)  {
-          var connString = dashDBconfig.ssldsn;  
+          var connString = dashDBconfig.ssldsn;
           }
        else {
           var connString = "DATABASE="+dashDBconfig.db+";HOSTNAME="+dashDBconfig.hostname+";PORT="+dashDBconfig.port+";PROTOCOL=TCPIP;UID="+dashDBconfig.username+";PWD="+dashDBconfig.password;
@@ -90,47 +92,53 @@ module.exports = function(RED) {
              }
           }
 
-        try {
-           console.log("dashDB output node: Opening db connection...");
-           db.openSync(connString);
-           console.log("dashDB output node: Connection open");
-	}
-	catch (e) {
-           node.error(e.message);
-	}
-
-        var columnList = getColumns(node,db,node.table,"dashDB output node");
-        
-        var columnListWithQuotes = "";
-        for (var i = 0; i < columnList.length; i++) {
-                if (i != 0) columnListWithQuotes += ',';
-                columnListWithQuotes += "\"" + columnList[i] + "\"";
-        
-        }
-        console.log("dashDB output node: columnList: " + columnListWithQuotes);
-
         node.on("close", function() {
            console.log("dashDB: Closing db connection...");
            db.closeSync();
            console.log("dashDB output node: Connection closed");
         });
 
-        var questionMarks = genQuestionMarks(columnList);
-
-        var insertStatement = "insert into \""+node.table+"\" (" + columnListWithQuotes + ") values("+questionMarks+")";
-        console.log("dashDB output node: Preparing insert statement: " + insertStatement);
-
         node.on("input", function(msg) {
-		db.prepare(insertStatement, function (err, stmt) {
-                   if (err) {
-		      node.error("dashDB output node: " + err);
-		   }
-		   else  {
-		      console.log("dashDB output node: Prepare successful");
-		      processInput(node,msg,db,stmt,columnList,"dashDB");
-		   }
-		});
-	});
+
+           if (!db.connected) {
+              console.log("DB2 output node: Database not connected; connecting first...");
+              db.open(connString,doTheRest);
+            }
+            else {
+              //console.log("We are connected because the value for db.connected is: " + db.connected);
+              doTheRest(null,db);
+            }
+
+            function doTheRest (err,conn) {
+              if (err) {
+                 node.error("DB2 output node, error connecting: " + err);
+                 return;
+              }
+
+              if (columnList == null) {
+                 columnList = getColumns(node,db,node.table,"dashDB output node");
+                 var columnListWithQuotes = "";
+                 for (var i = 0; i < columnList.length; i++) {
+                    if (i != 0) columnListWithQuotes += ',';
+                    columnListWithQuotes += "\"" + columnList[i] + "\"";
+                    }
+                 console.log("dashDB output node: columnList: " + columnListWithQuotes);
+                 var questionMarks = genQuestionMarks(columnList);
+                 insertStatement = "insert into \""+node.table+"\" (" + columnListWithQuotes + ") values("+questionMarks+")";
+                 console.log("dashDB output node: Preparing insert statement: " + insertStatement);
+               }
+
+               db.prepare(insertStatement, function (err, stmt) {
+               if (err) {
+                  node.error("dashDB output node: " + err);
+               }
+               else  {
+                  console.log("dashDB output node: Prepare successful");
+                  processInput(node,msg,db,stmt,columnList,"dashDB");
+               }
+              });
+            }
+        });
      }
 
 RED.nodes.registerType("dashDB out", dashDBOutNode);
@@ -161,8 +169,6 @@ function getColumns (node,db,table,service) {
      }
 
 function processInput (node,msg,db,stmt,columnList,service) {
-      console.log(service+": Input event received");
-      console.log(service+": columnList: "+columnList);
       var valueToInsert;
       var batchInsert;
       var valueList;
@@ -200,6 +206,10 @@ function processInput (node,msg,db,stmt,columnList,service) {
             stmt.execute(valueList, function (err, result) {
                if (err) {
                   node.error(service+": Insert failed: "+err);
+                  if(err.message.indexOf('30081') > -1) {
+                     console.log("30081 connection error detected; will flag the connection to reconnect on next try");
+                     db.connected = false;
+                  }
                } else {
                   console.log(service+": Insert successful!");
                   result.closeSync();
@@ -272,19 +282,6 @@ function genDB2Timestamp() {
       ("00" + d.getSeconds()).slice(-2);
 }
 
-function connectToDB(node,db,connString) {
-        try {
-           console.log("dashDB query node: Opening db connection...");
-           db.openSync(connString);
-           console.log("dashDB query node: Connection open");
-           return false;
-           }
-        catch (e) {
-           node.error(e.message);
-           return true;
-           }
-       } 
-
 function dashDBQueryNode(n) {
 
         RED.nodes.createNode(this,n);
@@ -312,64 +309,71 @@ function dashDBQueryNode(n) {
              }
           }
 
-        jail = connectToDB(node,db,connString);
-
         node.on("close", function() {
-           console.log("dashDB query node: Closing db connection...");
+           console.log("DB2 query node: Closing db connection...");
            db.closeSync();
-           console.log("dashDB query node: Connection closed");
+           console.log("DB2 query node: Connection closed");
         });
 
         this.on('input', function(msg) {
-           if (jail == true) { 
-              console.log("dashDB Query Node: Because previous connection was dropped, attempting reconnect..."); 
-              jail = connectToDB(node,db,connString); 
+           if (!db.connected) {
+              console.log("DB2 query node: Database not connected; connecting first...");
+              db.open(connString,doTheRest);
+            }
+            else {
+              //console.log("We are connected because the value for db.connected is: " + db.connected);
+              doTheRest(null,db);
+            }
+
+          function doTheRest (err,conn) {
+              if (err) {
+                 node.error("DB2 query node, error connecting: " + err);
+                 return;
               }
-           if (jail == false) {
-              if (query == "" || query == null) {
-                 if (msg.payload == "" || msg.payload == null) {
-                    node.error("dashDB query node: msg.payload is empty!");
-                    return;
+                 else {
+                    if (query == "" || query == null) {
+                       if (msg.payload == "" || msg.payload == null) {
+                          node.error("DB2 query node: msg.payload is empty!");
+                          return;
+                          }
+                       queryToUse = msg.payload;
                     }
-                 queryToUse = msg.payload;
-              }
-              else {
-                 queryToUse = query;
-              }
-              var parameterValues=[];
-              if (params != "" && params != null) {
-                 var path = pathToArray(params.toString());
-                 console.log("Input node: pathToArray: " + path);
-                 parameterValues = extractValues(msg, path);
-                 console.log("Input node: parameterValues: " + parameterValues);
-              }
-              db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
-                 queryresult = null;
-                 if (err) {
-                    node.error("dashDB query node: " + err);
-                    //debug: to print out the err message 
-                    //console.log(util.inspect(err, {showHidden: false, depth: null}))
-                    if(err.message.indexOf('30081') > -1) {
-                         console.log("30081 connection error detected; entering jail mode...");
-                         jail = true; 
-                       }    
-                    msg.error = err;
-                 } else {
-                    msg.error = null;
-                    console.log("Fetching rows: " + rows);
-                    console.log("value 1: " + JSON.stringify(rows[0]));
-                    if (rows.length == 1) {queryresult = rows[0];}
                     else {
-                       queryresult = [];
-                       for (var i = 0; i < rows.length; i++) {
-                          queryresult.push(rows[i]);
+                       queryToUse = query;
+                    }
+                 var parameterValues=[];
+                 if (params != "" && params != null) {
+                    var path = pathToArray(params.toString());
+                    console.log("Input node: pathToArray: " + path);
+                    parameterValues = extractValues(msg, path);
+                    console.log("Input node: parameterValues: " + parameterValues);
+                 }
+                 db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
+                    queryresult = null;
+                    if (err) {
+                       node.error("DB2 query node, error in query: " + err);
+                       msg.error = err;
+                       if(err.message.indexOf('30081') > -1) {
+                          console.log("30081 connection error detected; will flag the connection to reconnect on next try");
+                          db.connected = false;
+                       }
+                    } else {
+                       msg.error = null;
+                       console.log("Fetching rows: " + rows);
+                       console.log("value 1: " + JSON.stringify(rows[0]));
+                       if (rows.length == 1) {queryresult = rows[0];}
+                       else {
+                          queryresult = [];
+                          for (var i = 0; i < rows.length; i++) {
+                             queryresult.push(rows[i]);
+                          }
                        }
                     }
-                 }
-                 msg.payload = queryresult;
-                 node.send(msg);
-           });
-         } 
+                    msg.payload = queryresult;
+                    node.send(msg);
+              });
+            }
+          }
       });
     }
   RED.nodes.registerType("dashDB in",dashDBQueryNode);
