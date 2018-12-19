@@ -209,6 +209,8 @@ function processInput (node,msg,db,stmt,columnList,service) {
                      console.log("30081 connection error detected; will flag the connection to reconnect on next try");
                      db.connected = false;
                   }
+                   // since Catch node caught exception, expect the node not to send msg to output.
+                   return;
                } else {
                   console.log(service+": Insert successful!");
                   result.closeSync();
@@ -356,6 +358,8 @@ function dashDBQueryNode(n) {
                           console.log("30081 connection error detected; will flag the connection to reconnect on next try");
                           db.connected = false;
                        }
+                       // since Catch node caught exception, expect the node not to send msg to output.
+                       return;
                     } else {
                        msg.error = null;
                        console.log("Fetching rows: " + rows);
