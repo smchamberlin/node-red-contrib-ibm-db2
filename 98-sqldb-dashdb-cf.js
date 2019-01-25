@@ -111,12 +111,17 @@ module.exports = function(RED) {
 
             function doTheRest (err,conn) {
               if (err) {
-                 node.error("DB2 output node, error connecting: " + err);
+                 node.error("DB2 output node, error connecting: " + err, msg);
                  return;
               }
 
               if (columnList == null) {
+                try {
                  columnList = getColumns(node,db,node.table,"dashDB output node");
+                } catch (err) {
+                  node.error("dashDB output node: " + err, msg);
+                  return;
+                }
                  var columnListWithQuotes = "";
                  for (var i = 0; i < columnList.length; i++) {
                     if (i != 0) columnListWithQuotes += ',';
@@ -130,7 +135,7 @@ module.exports = function(RED) {
 
                db.prepare(insertStatement, function (err, stmt) {
                if (err) {
-                  node.error("dashDB output node: " + err);
+                  node.error("dashDB output node: " + err, msg);
                }
                else  {
                   console.log("dashDB output node: Prepare successful");
@@ -149,16 +154,10 @@ function getColumns (node,db,table,service) {
       if (removeSchema.length > 1) { table = removeSchema[1]; }
       console.log(service+": Fetching column names for table " + table + "...");
       var sysibmColumns;
-      try {
-         sysibmColumns = db.querySync("select name from sysibm.syscolumns where tbname = '"+table+"' and generated = ''");
-      }
-      catch (e) {
-         node.error("Error fetching column list: " + e.message);
-         return -1;
-      }
+      sysibmColumns = db.querySync("select name from sysibm.syscolumns where tbname = '"+table+"' and generated = ''");
 
       if (sysibmColumns.length == 0) {
-         node.error(service+": table "+table+" not found - is it defined?  Case matters.");
+         throw new Error(service+": table "+table+" not found - is it defined?  Case matters.");
          return -1;
       }
       var columnList = [];
@@ -199,17 +198,19 @@ function processInput (node,msg,db,stmt,columnList,service) {
                      valueList.push(valueToInsert);
                      }
                   }
-               else {node.error(service+": Column "+columnList[j]+" is missing from the payload or has an undefined value"); return;}
+               else {node.error(service+": Column "+columnList[j]+" is missing from the payload or has an undefined value", msg); return;}
             }
             console.log("Values to execute:");
             console.log(valueList);
             stmt.execute(valueList, function (err, result) {
                if (err) {
-                  node.error(service+": Insert failed: "+err);
+                  node.error(service+": Insert failed: "+err, msg);
                   if(err.message.indexOf('30081') > -1) {
                      console.log("30081 connection error detected; will flag the connection to reconnect on next try");
                      db.connected = false;
                   }
+                   // since Catch node caught exception, expect the node not to send msg to output.
+                   return;
                } else {
                   console.log(service+": Insert successful!");
                   result.closeSync();
@@ -327,13 +328,13 @@ function dashDBQueryNode(n) {
 
           function doTheRest (err,conn) {
               if (err) {
-                 node.error("DB2 query node, error connecting: " + err);
+                 node.error("DB2 query node, error connecting: " + err, msg);
                  return;
               }
                  else {
                     if (query == "" || query == null) {
                        if (msg.payload == "" || msg.payload == null) {
-                          node.error("DB2 query node: msg.payload is empty!");
+                          node.error("DB2 query node: msg.payload is empty!", msg);
                           return;
                           }
                        queryToUse = msg.payload;
@@ -351,16 +352,18 @@ function dashDBQueryNode(n) {
                  db.query(queryToUse,parameterValues,function (err, rows, moreResultSets) {
                     queryresult = null;
                     if (err) {
-                       node.error("DB2 query node, error in query: " + err);
+                       node.error("DB2 query node, error in query: " + err, msg);
                        msg.error = err;
                        if(err.message.indexOf('30081') > -1) {
                           console.log("30081 connection error detected; will flag the connection to reconnect on next try");
                           db.connected = false;
                        }
+                       // since Catch node caught exception, expect the node not to send msg to output.
+                       return;
                     } else {
                        msg.error = null;
-                       console.log("Fetching rows: " + rows);
-                       console.log("value 1: " + JSON.stringify(rows[0]));
+                       // console.log("Fetching rows: " + rows);
+                       // console.log("value 1: " + JSON.stringify(rows[0]));
                        if (rows.length == 1) {queryresult = rows[0];}
                        else {
                           queryresult = [];
