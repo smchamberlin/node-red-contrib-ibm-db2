@@ -362,8 +362,8 @@ function dashDBQueryNode(n) {
                        return;
                     } else {
                        msg.error = null;
-                       console.log("Fetching rows: " + rows);
-                       console.log("value 1: " + JSON.stringify(rows[0]));
+                       // console.log("Fetching rows: " + rows);
+                       // console.log("value 1: " + JSON.stringify(rows[0]));
                        if (rows.length == 1) {queryresult = rows[0];}
                        else {
                           queryresult = [];
