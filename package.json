@@ -1,20 +1,20 @@
 {
-    "name"         : "node-red-nodes-cf-sqldb-dashdb",
-    "version"      : "0.2.28",
-    "description"  : "Node-RED nodes to access SQLDB and dashDB services on Bluemix",
+    "name"         : "node-red-contrib-ibm-db2",
+    "version"      : "0.3.0",
+    "description"  : "Node-RED nodes to access Db2 cloud services and Db2 LUW",
     "dependencies" : {
         "cfenv": "x",
         "ibm_db" : "2.x"
     },
     "repository" : {
         "type" : "git",
-        "url"  : "https://github.com/smchamberlin/node-red-nodes-cf-sqldb-dashdb.git"
+        "url"  : "https://github.com/smchamberlin/node-red-contrib-ibm-db2.git"
     },
     "license"  : "Apache",
-    "keywords" : [ "node-red", "sqldb", "dashdb", "bluemix" ],
+    "keywords" : [ "node-red", "IBM Cloud", "Db2", "bluemix", "Db2 on Cloud" ],
     "node-red" : {
         "nodes" : {
-            "sqldb-dashdb-cf" : "98-sqldb-dashdb-cf.js"
+            "Db2" : "98-ibm-db2.js"
         }
     },
     "author" : {
