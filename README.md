@@ -1,22 +1,20 @@
-node-red-node-cf-sqldb
+node-red-contrib-ibm-db2
 =========================
-[Node-RED](http://nodered.org) nodes to work with a database 
-in a SQLDB or dashDB service that is integrated with
-[IBM Bluemix](http://bluemix.net).
+[Node-RED](http://nodered.org) nodes to work with a Db2 database (LUW) 
+including `DB2 on Cloud` and `Db2 Warehouse on Cloud` services on IBM Cloud.
 
 Install
 -------
 Install from [npm](http://npmjs.org)
 ```
-npm install node-red-nodes-cf-sqldb-dashdb
+npm install node-red-contrib-ibm-db2
 ```
 
 Usage
 -----
-This package contains 4 nodes -- two pairs of nodes for each of SQLDB and dashDB services.  The node pairs work almost identically, so the documentation contained here
-applies to both.  For each service, a query and an output node is provided.  The query nodes let you issue a query against
-your SQLDB or dashDB service and pass along the result set in the msg object.  The output nodes store elements from the msg object
-into your SQLDB or dashDB service database.
+This package contains 2 nodes `Db2 in` (query node) and `Db2 out` (output node).  The query node let you issue a query against
+Db2 and pass along the result set in the msg object.  The output node stores elements from the msg object
+into your Db2 service database.
 
 
 Query node usage:
@@ -24,9 +22,9 @@ Query node usage:
 
 You will need to fill in the following fields:
 
--- Service should point to your SQLDB or dashDB service.
+-- Service should point to your IBM `Db2 on Cloud` or `Db2 Warehouse on Cloud` service, or choose the `External Service` option to connect to a Db2 database that exists outside of the IBM cloud.
 
--- Query is the SQL select query you wish to execute on your dashDB service database.  If the
+-- Query is the SQL select query you wish to execute on your database.  If the
 field is empty, it will get the query from the msg.payload.
 
 These fields are optional:
@@ -61,12 +59,12 @@ return msg;
 ```
 
 This would assume that you have a table already created with columns (TS, SCREENNAME, TWEET, SENTIMENT, LOCATION).
-'TIMESTAMP' string is a special keyword that the node will replace with a real DB2 timestamp before insertion.
+'TIMESTAMP' string is a special keyword that the node will replace with a real Db2 timestamp before insertion.
 If you are missing a required column, an error will be displayed in the debug view.
 
 For output node configuration, you will need to fill in the following fields:
 
--- Service should point to your SQLDB or dashDB service.
+-- Service should point to your IBM `Db2 on Cloud` or `Db2 Warehouse on Cloud` service, or choose the `External Service` option to connect to a Db2 database that exists outside of the IBM cloud.
 
 -- Table should point to the table you wish to insert the values into.
 This table needs to exist already in the database and needs to contain the
