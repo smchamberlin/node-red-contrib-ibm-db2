@@ -14,7 +14,7 @@
   limitations under the License.
 -->
 
-<script type="text/x-red" data-template-name="dashDB">
+<script type="text/x-red" data-template-name="Db2">
     <div class="form-row">
         <label for="node-config-input-hostname"><i class="fa fa-bookmark"></i> Hostname</label>
         <input class="input-append-left" type="text" id="node-config-input-hostname">
@@ -42,7 +42,7 @@
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("dashDB",{
+    RED.nodes.registerType("Db2",{
         category: "config",
         color: "rgb(114, 199, 231)",
         defaults: {
@@ -61,19 +61,19 @@
     });
 </script>
 
-<script type="text/x-red" data-template-name="dashDB out">
+<script type="text/x-red" data-template-name="Db2 out">
 
     <div class="form-row">
         <label for="node-input-service"><i class="fa fa-folder-close"></i> Service</label>
         <select id="node-input-service" style="width:68%;">
             <!-- <option value="" disabled></option> -->
-            <option value="_ext_"> External dashDB or DB2 instance</option>
+            <option value="_ext_"> External Db2 instance</option>
         </select>
     </div>
 
     <div class="form-row hide" id="node-input-external-details">
-        <label for="node-input-dashDB"><i class="fa fa-bookmark"></i> Server</label>
-        <input type="text" id="node-input-dashDB">
+        <label for="node-input-Db2"><i class="fa fa-bookmark"></i> Server</label>
+        <input type="text" id="node-input-Db2">
     </div>
 
     <div class="form-row">
@@ -89,18 +89,18 @@
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("dashDB out", {
+    RED.nodes.registerType("Db2 out", {
         category: "storage-output",
         color: "rgb(153, 204, 153)",
         defaults: {
-            dashDB: { type:"dashDB", validate:validateServer },
+            Db2: { type:"Db2", validate:validateServer },
             service: { value: "", required: true },
             table: { value: "", required: true },
             name: { value: "" }
         },
         inputs: 1,
         outputs: 0,
-        icon: "dashDB.png",
+        icon: "Db2.png",
         align: "right",
         label: label,
         labelStyle: function() {
@@ -114,7 +114,7 @@
 
         var serviceSelect  = $('#node-input-service');
 
-        $.getJSON('dashDB/vcap/',function(data) {
+        $.getJSON('Db2/vcap/',function(data) {
             var last = serviceSelect.children().last();
             var opts = [];
 
@@ -151,7 +151,7 @@
     }
 
     function label() {
-        return this.name || this.table || "dashDB";
+        return this.name || this.table || "Db2";
     }
 
     function validateServer(v) {
@@ -160,12 +160,12 @@
 
 </script>
 
-<script type="text/x-red" data-help-name="dashDB out">
+<script type="text/x-red" data-help-name="Db2 out">
    <p>
-       A simple dashDB output node. Stores elements from the <b>msg.payload</b>
-       into your dashDB service.  The msg.payload should include a value for
+       A simple Db2 output node. Stores elements from the <b>msg.payload</b>
+       into Db2.  The msg.payload should include a value for
        each column in your table.  If you put a 'TIMESTAMP' string as one of the
-       values, the node will replace it with the current timestamp in DB2 format.
+       values, the node will replace it with the current timestamp in Db2 format.
    </p>
    <p>
        So for example, if you have a table with columns (TS, SCREENNAME, TWEET, SENTIMENT, LOCATION),
@@ -182,13 +182,14 @@
        }<br>
        return msg;<br><br>
    <p>
-       <b>Service</b> should point to your dashDB service.
+       <b>Service</b> should point to your Db2 on Cloud or Db2 Warehouse on Cloud service,
+       or choose the <b>External Db2 instance</b> option to point to your own Db2.
    </p>
    <p>
        <b>Table</b> should point to the table you wish to insert the values into.
        This table needs to exist already in the database and needs to contain the
        same columns and datatypes that you are inserting through this node.
-       The data needs to be in the format accepted by DB2 and within the appropriate
+       The data needs to be in the format accepted by Db2 and within the appropriate
        ranges/parameters for that datatype.
    </p>
    <p>
@@ -197,18 +198,18 @@
 
 </script>
 
-<script type="text/x-red" data-template-name="dashDB in">
+<script type="text/x-red" data-template-name="Db2 in">
    <div class="form-row">
        <label for="node-input-service"><i class="fa fa-folder-close"></i> Service</label>
        <select id="node-input-service" style="width:68%;">
            <!-- <option value="" disabled></option> -->
-           <option value="_ext_"> External dashDB or DB2 instance</option>
+           <option value="_ext_"> External Db2 instance</option>
        </select>
    </div>
 
    <div class="form-row hide" id="node-input-external-details">
-       <label for="node-input-dashDB"><i class="fa fa-bookmark"></i> Server</label>
-       <input type="text" id="node-input-dashDB">
+       <label for="node-input-Db2"><i class="fa fa-bookmark"></i> Server</label>
+       <input type="text" id="node-input-Db2">
    </div>
 
     <div class="form-row">
@@ -229,11 +230,11 @@
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("dashDB in", {
+    RED.nodes.registerType("Db2 in", {
         category: "storage-input",
         color: "rgb(153, 204, 153)",
         defaults: {
-            dashDB: { type:"dashDB", validate:validateServer },
+            Db2: { type:"Db2", validate:validateServer },
             service: { value: "", required: true },
             query: { value: "", required: false },
             params: { value: "", required: false },
@@ -241,7 +242,7 @@
         },
         inputs: 1,
         outputs: 1,
-        icon: "dashDB.png",
+        icon: "Db2.png",
         label: label,
         labelStyle: function() {
             return this.name?"node_label_italic":"";
@@ -254,7 +255,7 @@
 
         var serviceSelect  = $('#node-input-service');
 
-        $.getJSON('dashDB/vcap/',function(data) {
+        $.getJSON('Db2/vcap/',function(data) {
             var last = serviceSelect.children().last();
             var opts = [];
 
@@ -291,7 +292,7 @@
 
 
     function label() {
-        return this.name || "dashDB";
+        return this.name || "Db2";
     }
 
     function validateServer(v) {
@@ -300,18 +301,19 @@
 
 </script>
 
-<script type="text/x-red" data-help-name="dashDB in">
+<script type="text/x-red" data-help-name="Db2 in">
    <p>
-       A simple dashDB node for executing queries. It executes a query on your dashDB service database
+       A simple Db2 node for executing queries. It executes a query on your Db2 database
        and passes along the result set in the <b>msg</b> object, as msg.payload.  If there is an
        error during execution of the query, the msg.payload will be null and the error will be in
        msg.error.
    </p>
    <p>
-       <b>Service</b> should point to your dashDB service.
+       <b>Service</b> should point to your Db2 on Cloud or Db2 Warehouse on Cloud service,
+       or choose the <b>External Db2 instance</b> option to point to your own Db2.
    </p>
    <p>
-       <b>Query</b> is the query you wish to execute on your dashDB service database.  If it is empty,
+       <b>Query</b> is the query you wish to execute on your Db2 database.  If it is empty,
        it will look for the query in the msg.payload.
    </p>
    <p>
