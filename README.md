@@ -1,5 +1,10 @@
 node-red-contrib-ibm-db2
 =========================
+
+## PLEASE NOTE: This git exists for legacy/archive purposes, but all active development has moved here:
+
+- https://github.com/node-red-contrib-ibm-cloud/node-red-contrib-ibm-db2
+
 [Node-RED](http://nodered.org) nodes to work with a Db2 database (LUW) 
 including `DB2 on Cloud` and `Db2 Warehouse on Cloud` services on IBM Cloud.
 
