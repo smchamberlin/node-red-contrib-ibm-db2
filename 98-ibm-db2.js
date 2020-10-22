@@ -104,7 +104,7 @@ module.exports = function (RED) {
         Db2config.username +
         ";PWD=" +
         Db2config.password;
-      if (Db2config.port == 50001) {
+      if (Db2config.port != 50000) {
         connString = connString + ";Security=SSL";
       }
     }
@@ -369,7 +369,7 @@ module.exports = function (RED) {
         Db2config.username +
         ";PWD=" +
         Db2config.password;
-      if (Db2config.port == 50001) {
+      if (Db2config.port != 50000) {
         connString = connString + ";Security=SSL";
       }
     }
